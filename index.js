@@ -1,28 +1,25 @@
 require('dotenv').load();
 var pm2 = require('pm2');
 var nodemailer = require('nodemailer');
+var createSes = require('nodemailer-ses-transporter');
 var moment = require('moment-timezone');
 var _ = require('lodash');
 
 var mailReceiver = process.env.MAIL_RECEIVER || false;
 var mailSender = process.env.MAIL_SENDER;
-var user = process.env.MANDRILL_USER || false;
-var pass = process.env.MANDRILL_PASSWORD;
+var sesId = process.env.SES_ID;
+var sesSecret = process.env.SES_SECRET;
 
-if (!mailReceiver || !user || !pass) {
-  throw new Error('User || pass || receiver not specified');
+if (!mailReceiver || !sesId || !sesSecret) {
+  throw new Error('sesId || sesSecret || receiver not specified');
 }
 
 var transportOptions = {
-  type: 'smtp',
-  service: 'Mandrill',
-  auth: {
-    user: user,
-    pass: pass
-  }
+  accessKeyId: sesId,
+  secretAccessKe: sesSecret
 };
 
-var transporter = nodemailer.createTransport(transportOptions);
+const transporter = nodemailer.createTransport(createSes(transportOptions));
 
 pm2.connect(function(err) {
   if (err) { throw err; }
@@ -58,9 +55,9 @@ pm2.connect(function(err) {
         return e;
       }
 
-      transporter.sendMail({
+      return transporter.sendMail({
         to: mailReceiver,
-        from: mailSender || user + '@yourserver.com',
+        from: mailSender,
         subject: 'Server exception',
         text: compiled({ name: name, text: text, stack: stack })
       });
