@@ -14,6 +14,9 @@ if (!mailReceiver || !sesId || !sesSecret) {
   throw new Error('sesId || sesSecret || receiver not specified');
 }
 
+console.log('mail sender: %s', mailSender);
+console.log('mail going to: %s', mailReceiver);
+
 var transportOptions = {
   accessKeyId: sesId,
   secretAccessKe: sesSecret
