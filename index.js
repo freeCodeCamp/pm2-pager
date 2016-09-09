@@ -1,7 +1,7 @@
 require('dotenv').load();
 var pm2 = require('pm2');
 var nodemailer = require('nodemailer');
-var createSes = require('nodemailer-ses-transporter');
+var createSes = require('nodemailer-ses-transport');
 var moment = require('moment-timezone');
 var _ = require('lodash');
 
