@@ -9,6 +9,7 @@ var mailReceiver = process.env.MAIL_RECEIVER || false;
 var mailSender = process.env.MAIL_SENDER;
 var sesId = process.env.SES_ID;
 var sesSecret = process.env.SES_SECRET;
+var __DEV__ = process.env.NODE_ENV === 'development';
 
 if (!mailReceiver || !sesId || !sesSecret) {
   throw new Error('sesId || sesSecret || receiver not specified');
@@ -19,10 +20,10 @@ console.log('mail going to: %s', mailReceiver);
 
 var transportOptions = {
   accessKeyId: sesId,
-  secretAccessKe: sesSecret
+  secretAccessKey: sesSecret
 };
 
-const transporter = nodemailer.createTransport(createSes(transportOptions));
+var transporter = nodemailer.createTransport(createSes(transportOptions));
 
 pm2.connect(function(err) {
   if (err) { throw err; }
@@ -58,11 +59,18 @@ pm2.connect(function(err) {
         return e;
       }
 
-      return transporter.sendMail({
+      var mailData = {
         to: mailReceiver,
         from: mailSender,
         subject: 'Server exception',
         text: compiled({ name: name, text: text, stack: stack })
+      };
+      return transporter.sendMail(mailData, function(err, info) {
+        if (err) { return console.error(err); }
+        if (__DEV__) {
+          console.log('info: ', info);
+        }
+        return null;
       });
     });
   });
